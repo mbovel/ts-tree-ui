@@ -127,12 +127,12 @@ export class HTMLView<V> {
 					this.model.selectNext();
 					break;
 				case "ArrowRight":
-					for (const tree of this.model.selection) {
+					for (const tree of this.model.selectedSubtrees) {
 						this.getHtmlEl(tree).classList.remove("closed");
 					}
 					break;
 				case "ArrowLeft":
-					for (const tree of this.model.selection) {
+					for (const tree of this.model.selectedSubtrees) {
 						this.getHtmlEl(tree).classList.add("closed");
 					}
 					e.preventDefault();
