@@ -39,11 +39,11 @@ export class Model<V> {
 	}
 
 	selectPrev() {
-		this.selectOne(this._cursor && this._cursor.previous);
+		if (this._cursor && this._cursor.previous) this.selectOne(this._cursor.previous);
 	}
 
 	selectNext() {
-		this.selectOne(this._cursor && this._cursor.next);
+		if (this._cursor && this._cursor.next) this.selectOne(this._cursor.next);
 	}
 
 	selectToggle(tree: Tree<V>) {
@@ -168,6 +168,8 @@ export class Model<V> {
 		if (this._cursor && this._cursor.root !== this.root) {
 			const first = this._selection.values().next();
 			this.setCursor(first.done ? undefined : first.value);
+		} else {
+			this.setCursor(undefined);
 		}
 	}
 
