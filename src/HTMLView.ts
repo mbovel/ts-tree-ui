@@ -30,7 +30,7 @@ export class HTMLView<V> {
 		this.rootUlEl.removeEventListener("mousedown", this.mouseEventHandler);
 	}
 
-	handleModelEvent(e: ModelEvent<V>) {
+	private handleModelEvent(e: ModelEvent<V>) {
 		switch (e.type) {
 			case "insert": {
 				const newNodeEl = document.createElement("li");
@@ -79,27 +79,28 @@ export class HTMLView<V> {
 		}
 	}
 
-	handleMouseEvent(e: MouseEvent) {
-		const targetEl = this.getTarget(e);
-		if (targetEl) {
+	private handleMouseEvent(e: MouseEvent) {
+		const targetTree = this.getTarget(e);
+		if (targetTree) {
 			// If ctrl+shift are pressed, then default to calling it a ctrl
 			// (MS defaults to shift, Dropbox to ctrl).
 			if (e.ctrlKey || e.metaKey) {
 				e.preventDefault();
-				this.model.selectToggle(targetEl);
+				this.model.selectToggle(targetTree);
 			} else if (e.shiftKey) {
 				e.preventDefault();
-				this.model.selectUntil(targetEl);
+				this.model.selectUntil(targetTree);
 			} else {
 				e.preventDefault();
-				this.model.selectOne(targetEl);
+				this.openToggle(targetTree);
+				this.model.selectOne(targetTree);
 			}
 		} else {
 			this.model.resetSelection();
 		}
 	}
 
-	handleKeyboardEvent(e: KeyboardEvent) {
+	private handleKeyboardEvent(e: KeyboardEvent) {
 		if (e.ctrlKey || e.metaKey) {
 			switch (e.key) {
 				case "a":
@@ -125,6 +126,17 @@ export class HTMLView<V> {
 					e.preventDefault();
 					this.model.selectNext();
 					break;
+				case "ArrowRight":
+					for (const tree of this.model.selection) {
+						this.getHtmlEl(tree).classList.remove("closed");
+					}
+					break;
+				case "ArrowLeft":
+					for (const tree of this.model.selection) {
+						this.getHtmlEl(tree).classList.add("closed");
+					}
+					e.preventDefault();
+					break;
 				case "Delete":
 					e.preventDefault();
 					this.model.delete();
@@ -139,7 +151,15 @@ export class HTMLView<V> {
 		}
 	}
 
-	getTarget(e: Event): Tree<V> | undefined {
+	private openToggle(tree: Tree<V>) {
+		if (this.isOnlySelected(tree)) this.getHtmlEl(tree).classList.toggle("closed");
+	}
+
+	private isOnlySelected(tree: Tree<V>) {
+		return this.model.selection.size === 1 && this.model.selection.has(tree);
+	}
+
+	private getTarget(e: Event): Tree<V> | undefined {
 		if (e.target instanceof Node) {
 			for (let current: Node | null = e.target; current; current = current.parentNode) {
 				if (current instanceof HTMLElement) {
@@ -152,7 +172,7 @@ export class HTMLView<V> {
 		}
 	}
 
-	getHtmlEl(tree: Tree<V>): HTMLElement {
+	private getHtmlEl(tree: Tree<V>): HTMLElement {
 		const result = this.treeToHtmlEl.get(tree);
 		if (!result) {
 			throw new Error("No such tree");
@@ -160,7 +180,7 @@ export class HTMLView<V> {
 		return result;
 	}
 
-	getNode(el: HTMLElement): Tree<V> {
+	private getNode(el: HTMLElement): Tree<V> {
 		const result = this.htmlElToTree.get(el);
 		if (!result) {
 			throw new Error("No such tree");
