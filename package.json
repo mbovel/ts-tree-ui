@@ -1,13 +1,17 @@
 {
 	"dependencies": {
+		"ts-pubsub": "^0.1.0",
 		"ts-tree": "^0.1.4"
 	},
 	"devDependencies": {
 		"@types/mocha": "^5.2.5",
 		"@types/node": "^10.7.1",
 		"mocha": "^5.2.0",
+		"prettier": "^1.14.2",
+		"prettier-check": "^2.0.0",
 		"ts-loader": "^4.5.0",
 		"ts-node": "^7.0.1",
+		"tslint": "^5.11.0",
 		"typescript": "^3.0.1",
 		"webpack": "^4.16.5",
 		"webpack-cli": "^3.1.0"
@@ -15,6 +19,10 @@
 	"scripts": {
 		"test": "mocha --require ts-node/register",
 		"build": "webpack",
-		"build:watch": "webpack --watch"
+		"build:watch": "webpack --watch",
+		"prettier-check": "prettier-check src/Model.ts src/HTMLView.ts demo/app.ts *.json *.yml",
+		"prettier": "prettier --write src/Model.ts src/HTMLView.ts demo/app.ts *.json *.yml",
+		"tslint": "tslint --project tsconfig.json",
+		"tslint:fix": "tslint --project tsconfig.json --fix"
 	}
 }
