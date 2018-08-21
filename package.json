@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"ts-pubsub": "^0.1.0",
+		"ts-pubsub": "^0.1.2",
 		"ts-tree": "^0.1.4"
 	},
 	"devDependencies": {
@@ -13,7 +13,7 @@
 		"ts-node": "^7.0.1",
 		"tslint": "^5.11.0",
 		"typescript": "^3.0.1",
-		"webpack": "^4.16.5",
+		"webpack": "^4.17.0",
 		"webpack-cli": "^3.1.0"
 	},
 	"scripts": {
