@@ -127,12 +127,12 @@ export class HTMLView<V> {
 					this.model.selectNext();
 					break;
 				case "ArrowRight":
-					for (const tree of this.model.selection) {
+					for (const tree of this.model.selectedSubtrees) {
 						this.getHtmlEl(tree).classList.remove("closed");
 					}
 					break;
 				case "ArrowLeft":
-					for (const tree of this.model.selection) {
+					for (const tree of this.model.selectedSubtrees) {
 						this.getHtmlEl(tree).classList.add("closed");
 					}
 					e.preventDefault();
@@ -156,7 +156,7 @@ export class HTMLView<V> {
 	}
 
 	private isOnlySelected(tree: Tree<V>) {
-		return this.model.selection.size === 1 && this.model.selection.has(tree);
+		return this.model.sortedSelection.length === 1 && this.model.sortedSelection[0] === tree;
 	}
 
 	private getTarget(e: Event): Tree<V> | undefined {
