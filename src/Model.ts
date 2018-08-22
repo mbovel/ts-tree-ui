@@ -133,6 +133,7 @@ export class Model<V> {
 			}
 			this.insertAfter(parent, previousSibling, tree);
 		}
+		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
 	delete(): void {
@@ -140,6 +141,7 @@ export class Model<V> {
 			this.remove(tree);
 		}
 		this.ensureValidCursor();
+		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
 	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
