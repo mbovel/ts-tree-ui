@@ -8,9 +8,15 @@ export class HTMLView<V> {
 	private readonly treeToHtmlEl: Map<Tree<V>, HTMLElement> = new Map();
 	private readonly htmlElToTree: Map<HTMLElement, Tree<V>> = new Map();
 	private readonly modelEventHandler: (e: ModelEvent<V>) => void;
-	private readonly mouseEventHandler: (e: MouseEvent) => void;
+	private readonly mousedownEventHandler: (e: MouseEvent) => void;
+	private readonly mouseupEventHandler: (e: MouseEvent) => void;
 	private readonly keyboardEventHandler: (e: KeyboardEvent) => void;
+	private readonly dragstartEventHandler: (e: KeyboardEvent) => void;
+	private readonly dragenterEventHandler: (e: KeyboardEvent) => void;
+	private readonly dragendEventHandler: (e: KeyboardEvent) => void;
 	private cursorEl: HTMLElement | null = null;
+	private mirrorEl?: HTMLElement;
+	private overTree?: Tree<V>;
 
 	constructor(
 		private readonly model: Model<V>,
@@ -18,16 +24,29 @@ export class HTMLView<V> {
 		private readonly rootUlEl: Node
 	) {
 		this.modelEventHandler = this.handleModelEvent.bind(this);
-		this.mouseEventHandler = this.handleMouseEvent.bind(this);
+		this.mousedownEventHandler = this.handleMousedownEvent.bind(this);
+		this.mouseupEventHandler = this.handleMouseupEvent.bind(this);
 		this.keyboardEventHandler = this.handleKeyboardEvent.bind(this);
+		this.dragstartEventHandler = this.handleDragstartEvent.bind(this);
+		this.dragenterEventHandler = this.handleDragenterEvent.bind(this);
+		this.dragendEventHandler = this.handleDragendEvent.bind(this);
 		this.model.subscribe(this.modelEventHandler);
-		document.addEventListener("mousedown", this.mouseEventHandler);
+		document.addEventListener("mousedown", this.mousedownEventHandler);
+		document.addEventListener("mouseup", this.mouseupEventHandler);
 		document.addEventListener("keydown", this.keyboardEventHandler);
+		document.addEventListener("dragstart", this.dragstartEventHandler);
+		document.addEventListener("dragenter", this.dragenterEventHandler);
+		document.addEventListener("dragend", this.dragendEventHandler);
 	}
 
 	unbind() {
 		this.model.unsubscribe(this.modelEventHandler);
-		this.rootUlEl.removeEventListener("mousedown", this.mouseEventHandler);
+		this.rootUlEl.removeEventListener("mousedown", this.mousedownEventHandler);
+		this.rootUlEl.removeEventListener("mouseup", this.mouseupEventHandler);
+		this.rootUlEl.removeEventListener("keydown", this.keyboardEventHandler);
+		this.rootUlEl.removeEventListener("dragstart", this.dragstartEventHandler);
+		this.rootUlEl.removeEventListener("dragenter", this.dragenterEventHandler);
+		this.rootUlEl.removeEventListener("dragend", this.dragendEventHandler);
 	}
 
 	private handleModelEvent(e: ModelEvent<V>) {
@@ -35,7 +54,9 @@ export class HTMLView<V> {
 			case "insert": {
 				const newNodeEl = document.createElement("li");
 				newNodeEl.appendChild(this.valueToHtmlEl(e.tree.value));
-				newNodeEl.appendChild(document.createElement("ul"));
+				const childrenContainerEl = document.createElement("ul");
+				newNodeEl.setAttribute("draggable", "true");
+				newNodeEl.appendChild(childrenContainerEl);
 				const nextSiblingEl = e.tree.nextSibling
 					? this.getHtmlEl(e.tree.nextSibling)
 					: null;
@@ -79,24 +100,33 @@ export class HTMLView<V> {
 		}
 	}
 
-	private handleMouseEvent(e: MouseEvent) {
+	private handleMousedownEvent(e: MouseEvent) {
 		const targetTree = this.getTarget(e);
 		if (targetTree) {
 			// If ctrl+shift are pressed, then default to calling it a ctrl
 			// (MS defaults to shift, Dropbox to ctrl).
 			if (e.ctrlKey || e.metaKey) {
-				e.preventDefault();
 				this.model.selectToggle(targetTree);
 			} else if (e.shiftKey) {
-				e.preventDefault();
 				this.model.selectUntil(targetTree);
 			} else {
-				e.preventDefault();
-				this.openToggle(targetTree);
-				this.model.selectOne(targetTree);
+				if (!this.model.isSelected(targetTree)) {
+					this.model.selectOne(targetTree);
+				}
 			}
 		} else {
 			this.model.resetSelection();
+		}
+	}
+
+	private handleMouseupEvent(e: MouseEvent) {
+		const targetTree = this.getTarget(e);
+		if (targetTree) {
+			if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+				if (this.model.isSelected(targetTree)) {
+					this.model.selectOne(targetTree);
+				}
+			}
 		}
 	}
 
@@ -151,12 +181,50 @@ export class HTMLView<V> {
 		}
 	}
 
-	private openToggle(tree: Tree<V>) {
-		if (this.isOnlySelected(tree)) this.getHtmlEl(tree).classList.toggle("closed");
+	private handleDragstartEvent(e: DragEvent) {
+		e.dataTransfer.setData("text/html", "hello!!");
+		e.dataTransfer.dropEffect = "move";
+
+		const target = this.getTarget(e);
+		if (!target) return;
+
+		this.mirrorEl = document.createElement("ul");
+		this.mirrorEl.classList.add("mirror");
+		for (const subtree of this.model.selectedSubtrees) {
+			const subtreeEl = this.getHtmlEl(subtree);
+			this.mirrorEl.appendChild(subtreeEl.cloneNode(true));
+		}
+		document.body.appendChild(this.mirrorEl);
+		e.dataTransfer.setDragImage(this.mirrorEl, 0, 0);
 	}
 
-	private isOnlySelected(tree: Tree<V>) {
-		return this.model.sortedSelection.length === 1 && this.model.sortedSelection[0] === tree;
+	private handleDragenterEvent(e: DragEvent) {
+		const targetTree = this.getTarget(e);
+		if (this.overTree) {
+			this.getHtmlEl(this.overTree).classList.remove("over");
+			this.overTree = undefined;
+		}
+		if (!targetTree || this.model.isLeaf(targetTree)) {
+			return;
+		}
+		for (const subtree of this.model.selectedSubtrees) {
+			if (targetTree === subtree || targetTree.isChildOf(subtree)) {
+				return;
+			}
+		}
+		this.getHtmlEl(targetTree).classList.add("over");
+		this.overTree = targetTree;
+	}
+
+	private handleDragendEvent(e: DragEvent) {
+		if (this.mirrorEl) {
+			this.mirrorEl.remove();
+		}
+		if (this.overTree) {
+			this.model.insertAllIn(this.overTree, this.model.selectedSubtrees);
+			this.getHtmlEl(this.overTree).classList.remove("over");
+			this.overTree = undefined;
+		}
 	}
 
 	private getTarget(e: Event): Tree<V> | undefined {

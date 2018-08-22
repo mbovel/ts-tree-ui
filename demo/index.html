@@ -8,11 +8,26 @@
 	}
 
 	.selected > div {
-		background-color: green;
+		background-color: deeppink;
+		transform: translateZ(0); /* Fixes chrome background bug */
+	}
+
+	.mirror .selected > div {
+		background: none;
 	}
 
 	.closed > ul {
 		display: none;
+	}
+
+	.mirror {
+		position: absolute;
+		top: -9999px;
+		left: -9999px;
+	}
+
+	.over > div {
+		background-color: black;
 	}
 </style>
 <body>

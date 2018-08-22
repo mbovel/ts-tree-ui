@@ -10,6 +10,15 @@ export class Model<V> {
 
 	constructor(readonly root: Tree<V>, readonly isLeaf: (tree: Tree<V>) => boolean) {}
 
+	subscribe(fn: (e: ModelEvent<V>) => any) {
+		this.pubsub.subscribe(fn);
+		this.emitTree(this.root);
+	}
+
+	unsubscribe(fn: (e: ModelEvent<V>) => any) {
+		this.pubsub.unsubscribe(fn);
+	}
+
 	get sortedSelection() {
 		const result = [...this.selection];
 		result.sort((a, b) => a.isBefore(b));
@@ -28,13 +37,12 @@ export class Model<V> {
 		return result;
 	}
 
-	subscribe(fn: (e: ModelEvent<V>) => any) {
-		this.pubsub.subscribe(fn);
-		this.emitTree(this.root);
+	isSelected(tree: Tree<V>) {
+		return this.selection.has(tree);
 	}
 
-	unsubscribe(fn: (e: ModelEvent<V>) => any) {
-		this.pubsub.unsubscribe(fn);
+	isOnlySelected(tree: Tree<V>) {
+		return this.selection.size === 1 && this.selection.has(tree);
 	}
 
 	selectOne(tree?: Tree<V>) {
@@ -103,21 +111,27 @@ export class Model<V> {
 
 	copy(): void {
 		this.clipboard = this.selectedSubtrees.map(t => t.clone());
-		this.clipboard.reverse();
 	}
 
 	paste(): void {
 		if (!this.cursor) {
 			return;
 		}
-		const isLeaf = this.isLeaf(this.cursor);
-		const parent = isLeaf ? this.cursor.parent : this.cursor;
-		const previousSibling = isLeaf ? this.cursor : undefined;
+		this.insertAllIn(this.cursor, this.clipboard.map(t => t.clone()));
+	}
+
+	insertAllIn(target: Tree<V>, trees: Tree<V>[]) {
+		const isLeaf = this.isLeaf(target);
+		const parent = isLeaf ? target.parent : target;
+		const previousSibling = isLeaf ? target : undefined;
 		if (!parent) {
 			return;
 		}
-		for (const tree of this.clipboard) {
-			this.insertAfter(parent, previousSibling, tree.clone());
+		for (const tree of trees.reverse()) {
+			if (tree.root === this.root) {
+				this.remove(tree);
+			}
+			this.insertAfter(parent, previousSibling, tree);
 		}
 	}
 
