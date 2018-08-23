@@ -11,7 +11,7 @@ export class Model<V> {
 	constructor(
 		readonly root: Tree<V>,
 		readonly isLeaf: (tree: Tree<V>) => boolean,
-		readonly sort: (a: V, b: V) => number
+		readonly sort?: (a: V, b: V) => number
 	) {}
 
 	subscribe(fn: (e: ModelEvent<V>) => any) {
@@ -153,8 +153,13 @@ export class Model<V> {
 	}
 
 	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
-		const firstLarger = parent.children.find(child => this.sort(child.value, tree.value) > 0);
-		parent.insertBefore(firstLarger, tree);
+		if (this.sort) {
+			const sort = this.sort; // TS hack
+			const firstLarger = parent.children.find(child => sort(child.value, tree.value) > 0);
+			parent.insertBefore(firstLarger, tree);
+		} else {
+			parent.insertBefore(reference, tree);
+		}
 		this.pubsub.emit({ type: "insert", tree });
 		this.emitTree(tree.firstChild);
 	}

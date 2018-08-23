@@ -11,6 +11,7 @@
 		"url": "git+https://github.com/mbovel/ts-tree-ui.git"
 	},
 	"dependencies": {
+		"ts-loader": "^4.5.0",
 		"ts-pubsub": "^0.1.2",
 		"ts-tree": "^0.1.6"
 	},

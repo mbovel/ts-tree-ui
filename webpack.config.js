@@ -12,7 +12,7 @@ module.exports = {
 	module : {
 		rules: [
 			// all files with a '.ts' extension will be handled by 'ts-loader'
-			{test: /\.ts$/, use: 'ts-loader'}
+			{test: /\.ts$/, use: {loader: 'ts-loader', options: {configFile: "tsconfig-webpack.json"}}}
 		]
 	}
 }

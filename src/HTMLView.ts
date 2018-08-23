@@ -176,7 +176,7 @@ export class HTMLView<V> {
 	private handleDragenterEvent = (e: DragEvent) => {
 		const targetTree = this.getTarget(e);
 		if (this.dragoverTree) {
-			this.getHtmlEl(this.dragoverTree).classList.remove("dragoverTree");
+			this.getHtmlEl(this.dragoverTree).classList.remove("over");
 			this.dragoverTree = undefined;
 		}
 		if (!targetTree || this.model.isLeaf(targetTree)) {
@@ -187,7 +187,7 @@ export class HTMLView<V> {
 				return;
 			}
 		}
-		this.getHtmlEl(targetTree).classList.add("dragoverTree");
+		this.getHtmlEl(targetTree).classList.add("over");
 		this.dragoverTree = targetTree;
 	};
 
@@ -197,7 +197,7 @@ export class HTMLView<V> {
 		}
 		if (this.dragoverTree) {
 			this.model.insertAllIn(this.dragoverTree, ...this.model.selectedSubtrees);
-			this.getHtmlEl(this.dragoverTree).classList.remove("dragoverTree");
+			this.getHtmlEl(this.dragoverTree).classList.remove("over");
 			this.dragoverTree = undefined;
 		}
 	};
