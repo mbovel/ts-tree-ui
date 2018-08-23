@@ -17,12 +17,14 @@
 		"webpack-cli": "^3.1.0"
 	},
 	"scripts": {
-		"test": "mocha --require ts-node/register",
-		"build": "webpack",
-		"build:watch": "webpack --watch",
-		"prettier-check": "prettier-check src/Model.ts src/HTMLView.ts demo/app.ts *.json *.yml",
-		"prettier": "prettier --write src/Model.ts src/HTMLView.ts demo/app.ts *.json *.yml",
+		"build-demo": "webpack",
+		"build-demo:watch": "webpack --watch",
+		"prettier-check": "prettier-check src/*.ts demo/*.ts *.json *.yml",
+		"prettier": "prettier --write src/*.ts demo/*.ts *.json *.yml",
 		"tslint": "tslint --project tsconfig.json",
-		"tslint:fix": "tslint --project tsconfig.json --fix"
+		"tslint:fix": "tslint --project tsconfig.json --fix",
+		"build": "tsc",
+		"preversion": "npm run prettier && npm run tslint:fix && npm run tslint",
+		"postversion": "git push && git push --tags"
 	}
 }

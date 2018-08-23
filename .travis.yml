@@ -1,0 +1,22 @@
+language: node_js
+node_js:
+    - node
+cache:
+    directories:
+        - node_modules
+notifications:
+    email: false
+script:
+    - npm run prettier-check
+    - npm run tslint
+before_deploy:
+    - npm run build
+deploy:
+    skip_cleanup: true
+    provider: npm
+    email: matthigit eu@bovel.net
+    api_key:
+        secure: HwBSbvxPHZIv2S7TJ5secHsS+0Q0X8yE2QftdQpKPhSLsO/lwI08A/+BqSfhFioTzu/Q/k7LbKaExjKr+5U8t05Sy+T4R3yDGSz09NhuytNHguXyk+B2bp21PwrHIfKmttBfSLG95QvFJ6VMKBmv33IcfkhHZYOexYQFoR2v7wwApXXBfC4qK/CkQf8M1hAYCYMML+0R6gmKYqglNKJh7IgmybYaE6YkG08P40l9C0rxW3qNtPHa4K2U6Yf/QpHUfY8W7srSU3otAcmgW5dYau/G94gA2DeSRRpt79Klli3/zVDW//ZKXcjC9UO7zScBYi6wm1gAWilvY1eH2sV9rEpul9DFXUdn1TdMwOuzV+BGMY6yrsMBmAODK/VKmHRpuIIAchU/s5RobPpcLB7plK8aPF9yJ1azULuLWkDCp96USUGGjYWaXtgZmyZOA54VuKuwTsWSjW1MPfezQid3+fGpH87ZB0rpCqhoav0Q5BJHbdEyu4aAhMRCESVhDS+ytyuhnZsDAyiNX/1xw3zVbWkZGPAiQRj/48GvQWIUZO5czs9qVLcw7tmMwsJn1cb6O1xL1S16JLsGTCgK36Wm0AcC1EdurBSMh+aUv0iO8aii24O07n8arCM80xpTFPPnAKTOtFSi4m62OPnuiw/nz+w4O7TlEOsqlz/DEAdEBFM=
+    on:
+        tags: true
+        repo: mbovel/ts-tree-ui
