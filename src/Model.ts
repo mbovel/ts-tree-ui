@@ -8,7 +8,11 @@ export class Model<V> {
 	private cursor?: Tree<V>;
 	private pubsub: PubSub<ModelEvent<V>> = new PubSub();
 
-	constructor(readonly root: Tree<V>, readonly isLeaf: (tree: Tree<V>) => boolean) {}
+	constructor(
+		readonly root: Tree<V>,
+		readonly isLeaf: (tree: Tree<V>) => boolean,
+		readonly sort: (a: V, b: V) => number
+	) {}
 
 	subscribe(fn: (e: ModelEvent<V>) => any) {
 		this.pubsub.subscribe(fn);
@@ -145,7 +149,8 @@ export class Model<V> {
 	}
 
 	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
-		parent.insertAfter(reference, tree);
+		const firstLarger = parent.children.find(child => this.sort(child.value, tree.value) > 0);
+		parent.insertBefore(firstLarger, tree);
 		this.pubsub.emit({ type: "insert", tree });
 		this.emitTree(tree.firstChild);
 	}
