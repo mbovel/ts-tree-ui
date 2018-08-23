@@ -2,7 +2,8 @@ import { Tree } from "ts-tree";
 import { Model } from "./Model";
 import { ModelEvent } from "./ModelEvent";
 
-const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+const isBrowser = typeof navigator === "undefined";
+const isMac = isBrowser ? false : navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
 export class HTMLView<V> {
 	private readonly treeToHtmlEl: Map<Tree<V>, HTMLElement> = new Map();
