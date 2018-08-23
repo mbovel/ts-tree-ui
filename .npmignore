@@ -1,0 +1,6 @@
+src
+test
+.prettierrc.json
+.travis.yml
+tsconfig.json
+tslint.json
