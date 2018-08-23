@@ -1,6 +1,9 @@
 src
 test
+demo
+.gitattributes
 .prettierrc.json
 .travis.yml
 tsconfig.json
 tslint.json
+webpack.config.js
