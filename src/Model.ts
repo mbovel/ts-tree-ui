@@ -50,7 +50,7 @@ export class Model<V> {
 	}
 
 	selectOne(tree?: Tree<V>) {
-		if (tree && this.selection.size === 1 && this.selection.has(tree)) {
+		if (tree && this.isOnlySelected(tree)) {
 			return;
 		}
 		for (const node of this.selection) {
@@ -65,11 +65,15 @@ export class Model<V> {
 	}
 
 	selectPrev() {
-		if (this.cursor && this.cursor.previous) this.selectOne(this.cursor.previous);
+		if (this.cursor && this.cursor.previous) {
+			this.selectOne(this.cursor.previous);
+		}
 	}
 
 	selectNext() {
-		if (this.cursor && this.cursor.next) this.selectOne(this.cursor.next);
+		if (this.cursor && this.cursor.next) {
+			this.selectOne(this.cursor.next);
+		}
 	}
 
 	selectToggle(tree: Tree<V>) {
@@ -121,10 +125,10 @@ export class Model<V> {
 		if (!this.cursor) {
 			return;
 		}
-		this.insertAllIn(this.cursor, this.clipboard.map(t => t.clone()));
+		this.insertAllIn(this.cursor, ...this.clipboard.map(t => t.clone()));
 	}
 
-	insertAllIn(target: Tree<V>, trees: Tree<V>[]) {
+	insertAllIn(target: Tree<V>, ...trees: Tree<V>[]) {
 		const isLeaf = this.isLeaf(target);
 		const parent = isLeaf ? target.parent : target;
 		const previousSibling = isLeaf ? target : undefined;

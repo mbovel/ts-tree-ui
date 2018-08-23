@@ -9,7 +9,7 @@ export class HTMLView<V> {
 	private readonly htmlElToTree: Map<HTMLElement, Tree<V>> = new Map();
 	private cursorEl: HTMLElement | null = null;
 	private mirrorEl?: HTMLElement;
-	private overTree?: Tree<V>;
+	private dragoverTree?: Tree<V>;
 
 	constructor(
 		private readonly model: Model<V>,
@@ -42,30 +42,12 @@ export class HTMLView<V> {
 	private handleModelEvent = (e: ModelEvent<V>) => {
 		switch (e.type) {
 			case "insert": {
-				const newNodeEl = document.createElement("li");
-				newNodeEl.appendChild(this.valueToHtmlEl(e.tree.value));
-				const childrenContainerEl = document.createElement("ul");
-				newNodeEl.setAttribute("draggable", "true");
-				newNodeEl.appendChild(childrenContainerEl);
-				const nextSiblingEl = e.tree.nextSibling
-					? this.getHtmlEl(e.tree.nextSibling)
-					: null;
-				const parentEl = e.tree.parent
-					? this.getHtmlEl(e.tree.parent).childNodes[1]
-					: this.rootUlEl;
-				parentEl.insertBefore(newNodeEl, nextSiblingEl);
-				this.htmlElToTree.set(newNodeEl, e.tree);
-				this.treeToHtmlEl.set(e.tree, newNodeEl);
+				const parentEl = this.getParentEl(e.tree);
+				parentEl.insertBefore(this.createTreeEl(e.tree), this.getNextSiblingEl(e.tree));
 				break;
 			}
 			case "remove": {
-				const el = this.getHtmlEl(e.tree);
-				if (!el.parentElement) {
-					throw new Error("Cannot remove root element");
-				}
-				this.htmlElToTree.delete(el);
-				this.treeToHtmlEl.delete(e.tree);
-				el.parentElement.removeChild(el);
+				this.removeTreeEl(e.tree);
 				break;
 			}
 			case "add-to-selection": {
@@ -172,11 +154,13 @@ export class HTMLView<V> {
 	};
 
 	private handleDragstartEvent = (e: DragEvent) => {
-		e.dataTransfer.setData("text/html", "hello!!");
+		e.dataTransfer.setData("text/html", "");
 		e.dataTransfer.dropEffect = "move";
 
 		const target = this.getTarget(e);
-		if (!target) return;
+		if (!target) {
+			return;
+		}
 
 		this.mirrorEl = document.createElement("ul");
 		this.mirrorEl.classList.add("mirror");
@@ -190,9 +174,9 @@ export class HTMLView<V> {
 
 	private handleDragenterEvent = (e: DragEvent) => {
 		const targetTree = this.getTarget(e);
-		if (this.overTree) {
-			this.getHtmlEl(this.overTree).classList.remove("over");
-			this.overTree = undefined;
+		if (this.dragoverTree) {
+			this.getHtmlEl(this.dragoverTree).classList.remove("dragoverTree");
+			this.dragoverTree = undefined;
 		}
 		if (!targetTree || this.model.isLeaf(targetTree)) {
 			return;
@@ -202,18 +186,18 @@ export class HTMLView<V> {
 				return;
 			}
 		}
-		this.getHtmlEl(targetTree).classList.add("over");
-		this.overTree = targetTree;
+		this.getHtmlEl(targetTree).classList.add("dragoverTree");
+		this.dragoverTree = targetTree;
 	};
 
 	private handleDragendEvent = (e: DragEvent) => {
 		if (this.mirrorEl) {
 			this.mirrorEl.remove();
 		}
-		if (this.overTree) {
-			this.model.insertAllIn(this.overTree, this.model.selectedSubtrees);
-			this.getHtmlEl(this.overTree).classList.remove("over");
-			this.overTree = undefined;
+		if (this.dragoverTree) {
+			this.model.insertAllIn(this.dragoverTree, ...this.model.selectedSubtrees);
+			this.getHtmlEl(this.dragoverTree).classList.remove("dragoverTree");
+			this.dragoverTree = undefined;
 		}
 	};
 
@@ -228,6 +212,32 @@ export class HTMLView<V> {
 				}
 			}
 		}
+	}
+
+	private createTreeEl(tree: Tree<V>) {
+		const treeEl = document.createElement("li");
+		treeEl.appendChild(this.valueToHtmlEl(tree.value));
+		const childrenContainerEl = document.createElement("ul");
+		treeEl.setAttribute("draggable", "true");
+		treeEl.appendChild(childrenContainerEl);
+		this.htmlElToTree.set(treeEl, tree);
+		this.treeToHtmlEl.set(tree, treeEl);
+		return treeEl;
+	}
+
+	private removeTreeEl(tree: Tree<V>) {
+		const treeEl = this.getHtmlEl(tree);
+		this.htmlElToTree.delete(treeEl);
+		this.treeToHtmlEl.delete(tree);
+		treeEl.remove();
+	}
+
+	private getNextSiblingEl(tree: Tree<V>): Node | null {
+		return tree.nextSibling ? this.getHtmlEl(tree.nextSibling) : null;
+	}
+
+	private getParentEl(tree: Tree<V>): Node {
+		return tree.parent ? this.getHtmlEl(tree.parent).childNodes[1] : this.rootUlEl;
 	}
 
 	private getHtmlEl(tree: Tree<V>): HTMLElement {
