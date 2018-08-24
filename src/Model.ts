@@ -9,7 +9,7 @@ export class Model<V> {
 	private pubsub: PubSub<ModelEvent<V>> = new PubSub();
 
 	constructor(
-		readonly root: Tree<V>,
+		private root: Tree<V>,
 		readonly isLeaf: (tree: Tree<V>) => boolean,
 		readonly sort?: (a: V, b: V) => number
 	) {}
@@ -162,13 +162,13 @@ export class Model<V> {
 		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
-	changeValue(newValue: V) {
+	setValue(newValue: V) {
 		if (this.cursor) {
-			return this.changeValueOf(this.cursor, newValue);
+			return this.setValueOf(this.cursor, newValue);
 		}
 	}
 
-	changeValueOf(tree: Tree<V>, newValue: V) {
+	setValueOf(tree: Tree<V>, newValue: V) {
 		const parent = tree.parent;
 		if (!parent) {
 			return;
@@ -177,6 +177,13 @@ export class Model<V> {
 		tree.value = newValue;
 		this.insertAllIn(parent, tree);
 		this.pubsub.emit({ type: "tree-change", tree: this.root });
+	}
+
+	setRoot(newRoot: Tree<V>) {
+		this.remove(this.root);
+		this.root = newRoot;
+		this.emitTree(newRoot);
+		this.ensureValidCursor();
 	}
 
 	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
@@ -219,9 +226,6 @@ export class Model<V> {
 
 	private ensureValidCursor() {
 		if (this.cursor && this.cursor.root !== this.root) {
-			const first = this.selection.values().next();
-			this.setCursor(first.done ? undefined : first.value);
-		} else {
 			this.setCursor(undefined);
 		}
 	}
