@@ -128,6 +128,12 @@ export class Model<V> {
 		this.insertAllIn(this.cursor, ...this.clipboard.map(t => t.clone()));
 	}
 
+	insertAll(...trees: Tree<V>[]) {
+		if (this.cursor) {
+			return this.insertAllIn(this.cursor, ...trees);
+		}
+	}
+
 	insertAllIn(target: Tree<V>, ...trees: Tree<V>[]) {
 		const isLeaf = this.isLeaf(target);
 		const parent = isLeaf ? target.parent : target;
@@ -135,6 +141,10 @@ export class Model<V> {
 		if (!parent) {
 			return;
 		}
+		this.insertAllAfter(parent, previousSibling, ...trees);
+	}
+
+	insertAllAfter(parent: Tree<V>, previousSibling: Tree<V> | undefined, ...trees: Tree<V>[]) {
 		for (const tree of trees.reverse()) {
 			if (tree.root === this.root) {
 				this.remove(tree);
@@ -152,13 +162,30 @@ export class Model<V> {
 		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
+	changeValue(newValue: V) {
+		if (this.cursor) {
+			return this.changeValueOf(this.cursor, newValue);
+		}
+	}
+
+	changeValueOf(tree: Tree<V>, newValue: V) {
+		const parent = tree.parent;
+		if (!parent) {
+			return;
+		}
+		this.remove(tree);
+		tree.value = newValue;
+		this.insertAllIn(parent, tree);
+		this.pubsub.emit({ type: "tree-change", tree: this.root });
+	}
+
 	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
 		if (this.sort) {
 			const sort = this.sort; // TS hack
 			const firstLarger = parent.children.find(child => sort(child.value, tree.value) > 0);
 			parent.insertBefore(firstLarger, tree);
 		} else {
-			parent.insertBefore(reference, tree);
+			parent.insertAfter(reference, tree);
 		}
 		this.pubsub.emit({ type: "insert", tree });
 		this.emitTree(tree.firstChild);

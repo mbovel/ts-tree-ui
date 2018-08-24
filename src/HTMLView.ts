@@ -10,6 +10,7 @@ export class HTMLView<V> {
 	private readonly htmlElToTree: Map<HTMLElement, Tree<V>> = new Map();
 	private cursorEl: HTMLElement | null = null;
 	private mirrorEl?: HTMLElement;
+	private clickedEl?: HTMLElement;
 	private dragoverTree?: Tree<V>;
 
 	constructor(
@@ -24,6 +25,7 @@ export class HTMLView<V> {
 		this.model.subscribe(this.handleModelEvent);
 		document.addEventListener("mousedown", this.handleMousedownEvent);
 		document.addEventListener("mouseup", this.handleMouseupEvent);
+		document.addEventListener("click", this.handleClickEvent);
 		document.addEventListener("keydown", this.handleKeyboardEvent);
 		document.addEventListener("dragstart", this.handleDragstartEvent);
 		document.addEventListener("dragenter", this.handleDragenterEvent);
@@ -34,6 +36,7 @@ export class HTMLView<V> {
 		this.model.unsubscribe(this.handleModelEvent);
 		document.removeEventListener("mousedown", this.handleMousedownEvent);
 		document.removeEventListener("mouseup", this.handleMouseupEvent);
+		document.removeEventListener("click", this.handleClickEvent);
 		document.removeEventListener("keydown", this.handleKeyboardEvent);
 		document.removeEventListener("dragstart", this.handleDragstartEvent);
 		document.removeEventListener("dragenter", this.handleDragenterEvent);
@@ -76,6 +79,9 @@ export class HTMLView<V> {
 	private handleMousedownEvent = (e: MouseEvent) => {
 		const targetTree = this.getTarget(e);
 		if (targetTree) {
+			this.clickedEl = this.getHtmlEl(targetTree);
+			this.clickedEl.setAttribute("draggable", "true");
+
 			// If ctrl+shift are pressed, then default to calling it a ctrl
 			// (MS defaults to shift, Dropbox to ctrl).
 			if (e.ctrlKey || e.metaKey) {
@@ -87,12 +93,13 @@ export class HTMLView<V> {
 					this.model.selectOne(targetTree);
 				}
 			}
-		} else {
-			this.model.resetSelection();
 		}
 	};
 
 	private handleMouseupEvent = (e: MouseEvent) => {
+		if (this.clickedEl) {
+			this.clickedEl.removeAttribute("draggable");
+		}
 		const targetTree = this.getTarget(e);
 		if (targetTree) {
 			if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
@@ -100,6 +107,13 @@ export class HTMLView<V> {
 					this.model.selectOne(targetTree);
 				}
 			}
+		}
+	};
+
+	private handleClickEvent = (e: MouseEvent) => {
+		const targetTree = this.getTarget(e);
+		if (!this.getTarget(e)) {
+			this.model.resetSelection();
 		}
 	};
 
@@ -219,7 +233,6 @@ export class HTMLView<V> {
 		const treeEl = document.createElement("li");
 		treeEl.appendChild(this.valueToHtmlEl(tree.value));
 		const childrenContainerEl = document.createElement("ul");
-		treeEl.setAttribute("draggable", "true");
 		treeEl.appendChild(childrenContainerEl);
 		this.htmlElToTree.set(treeEl, tree);
 		this.treeToHtmlEl.set(tree, treeEl);
