@@ -146,9 +146,6 @@ export class Model<V> {
 
 	insertAllAfter(parent: Tree<V>, previousSibling: Tree<V> | undefined, ...trees: Tree<V>[]) {
 		for (const tree of trees.reverse()) {
-			if (tree.root === this.root) {
-				this.remove(tree);
-			}
 			this.insertAfter(parent, previousSibling, tree);
 		}
 		this.pubsub.emit({ type: "tree-change", tree: this.root });
@@ -169,13 +166,11 @@ export class Model<V> {
 	}
 
 	setValueOf(tree: Tree<V>, newValue: V) {
-		const parent = tree.parent;
-		if (!parent) {
+		if (!tree.parent) {
 			return;
 		}
-		this.remove(tree);
 		tree.value = newValue;
-		this.insertAllIn(parent, tree);
+		this.insertAfter(tree.parent, tree.previousSibling, tree);
 		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
@@ -187,6 +182,9 @@ export class Model<V> {
 	}
 
 	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
+		if (tree.root === this.root) {
+			this.remove(tree);
+		}
 		if (this.sort) {
 			const sort = this.sort; // TS hack
 			const firstLarger = parent.children.find(child => sort(child.value, tree.value) > 0);
