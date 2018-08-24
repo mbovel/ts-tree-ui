@@ -224,6 +224,9 @@ export class Model<V> {
 
 	private ensureValidCursor() {
 		if (this.cursor && this.cursor.root !== this.root) {
+			const first = this.selection.values().next();
+			this.setCursor(first.done ? undefined : first.value);
+		} else {
 			this.setCursor(undefined);
 		}
 	}
