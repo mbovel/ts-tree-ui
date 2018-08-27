@@ -16,11 +16,14 @@ export class Model<V> {
 
 	subscribe(fn: (e: ModelEvent<V>) => any) {
 		this.pubsub.subscribe(fn);
-		this.emitTree(this.root);
 	}
 
 	unsubscribe(fn: (e: ModelEvent<V>) => any) {
 		this.pubsub.unsubscribe(fn);
+	}
+
+	emitAllInserts(fn: (e: ModelEvent<V>) => any) {
+		this.emitTree(this.root, fn);
 	}
 
 	get sortedSelection() {
@@ -231,12 +234,15 @@ export class Model<V> {
 		}
 	}
 
-	private emitTree(tree?: Tree<V>) {
+	private emitTree(
+		tree?: Tree<V>,
+		fn: (e: ModelEvent<V>) => any = this.pubsub.emit.bind(this.pubsub)
+	) {
 		if (!tree) {
 			return;
 		}
-		this.emitTree(tree.nextSibling);
-		this.pubsub.emit({ type: "insert", tree });
-		this.emitTree(tree.firstChild);
+		this.emitTree(tree.nextSibling, fn);
+		fn({ type: "insert", tree });
+		this.emitTree(tree.firstChild, fn);
 	}
 }
