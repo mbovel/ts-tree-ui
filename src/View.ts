@@ -68,7 +68,24 @@ export class View<V> {
 		}
 	}
 
-	protected handleModelEvent = (e: ModelEvent<V>) => {
+	protected createTreeEl(tree: Tree<V>) {
+		const treeEl = document.createElement("li");
+		treeEl.appendChild(this.valueToHtmlEl(tree.value));
+		const childrenContainerEl = document.createElement("ul");
+		treeEl.appendChild(childrenContainerEl);
+		this.htmlElToTree.set(treeEl, tree);
+		this.treeToHtmlEl.set(tree, treeEl);
+		return treeEl;
+	}
+
+	protected removeTreeEl(tree: Tree<V>) {
+		const treeEl = this.getHtmlEl(tree);
+		this.htmlElToTree.delete(treeEl);
+		this.treeToHtmlEl.delete(tree);
+		treeEl.remove();
+	}
+
+	private handleModelEvent = (e: ModelEvent<V>) => {
 		switch (e.type) {
 			case "insert": {
 				const parentEl = this.getParentEl(e.tree);
@@ -100,23 +117,6 @@ export class View<V> {
 			}
 		}
 	};
-
-	private createTreeEl(tree: Tree<V>) {
-		const treeEl = document.createElement("li");
-		treeEl.appendChild(this.valueToHtmlEl(tree.value));
-		const childrenContainerEl = document.createElement("ul");
-		treeEl.appendChild(childrenContainerEl);
-		this.htmlElToTree.set(treeEl, tree);
-		this.treeToHtmlEl.set(tree, treeEl);
-		return treeEl;
-	}
-
-	private removeTreeEl(tree: Tree<V>) {
-		const treeEl = this.getHtmlEl(tree);
-		this.htmlElToTree.delete(treeEl);
-		this.treeToHtmlEl.delete(tree);
-		treeEl.remove();
-	}
 
 	private getNextSiblingEl(tree: Tree<V>): Node | null {
 		return tree.nextSibling ? this.getHtmlEl(tree.nextSibling) : null;
