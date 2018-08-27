@@ -147,19 +147,8 @@ export class Model<V> {
 		this.insertAllAfter(parent, previousSibling, ...trees);
 	}
 
-	insertAllAfter(parent: Tree<V>, previousSibling: Tree<V> | undefined, ...trees: Tree<V>[]) {
-		for (const tree of trees.reverse()) {
-			this.insertAfter(parent, previousSibling, tree);
-		}
-		this.pubsub.emit({ type: "tree-change", tree: this.root });
-	}
-
 	delete(): void {
-		for (const tree of this.selectedSubtrees) {
-			this.remove(tree);
-		}
-		this.ensureValidCursor();
-		this.pubsub.emit({ type: "tree-change", tree: this.root });
+		this.removeAll(...this.selectedSubtrees);
 	}
 
 	setValue(newValue: V) {
@@ -173,36 +162,35 @@ export class Model<V> {
 			return;
 		}
 		tree.value = newValue;
-		this.insertAfter(tree.parent, tree.previousSibling, tree);
+		this.insertAllAfter(tree.parent, tree.previousSibling, tree);
+	}
+
+	insertAllAfter(parent: Tree<V>, previousSibling: Tree<V> | undefined, ...trees: Tree<V>[]) {
+		this.removeAll(...trees.filter(tree => tree.root === this.root));
+		for (const tree of trees.reverse()) {
+			if (this.sort) {
+				const sort = this.sort; // TS hack
+				const firstLarger = parent.children.find(
+					child => sort(child.value, tree.value) > 0
+				);
+				parent.insertBefore(firstLarger, tree);
+			} else {
+				parent.insertAfter(previousSibling, tree);
+			}
+			this.pubsub.emit({ type: "insert", tree });
+			this.emitTree(tree.firstChild);
+		}
 		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
-	setRoot(newRoot: Tree<V>) {
-		this.remove(this.root);
-		this.root = newRoot;
-		this.emitTree(newRoot);
+	removeAll(...trees: Tree<V>[]) {
+		for (const tree of trees) {
+			this.removeFromSelection(tree);
+			tree.remove();
+			this.pubsub.emit({ type: "remove", tree });
+		}
 		this.ensureValidCursor();
-	}
-
-	private insertAfter(parent: Tree<V>, reference: Tree<V> | undefined, tree: Tree<V>) {
-		if (tree.root === this.root) {
-			this.remove(tree);
-		}
-		if (this.sort) {
-			const sort = this.sort; // TS hack
-			const firstLarger = parent.children.find(child => sort(child.value, tree.value) > 0);
-			parent.insertBefore(firstLarger, tree);
-		} else {
-			parent.insertAfter(reference, tree);
-		}
-		this.pubsub.emit({ type: "insert", tree });
-		this.emitTree(tree.firstChild);
-	}
-
-	private remove(tree: Tree<V>) {
-		this.removeFromSelection(tree);
-		tree.remove();
-		this.pubsub.emit({ type: "remove", tree });
+		this.pubsub.emit({ type: "tree-change", tree: this.root });
 	}
 
 	private addToSelection(tree: Tree<V>) {
