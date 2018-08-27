@@ -1,7 +1,7 @@
 import { Tree } from "ts-tree";
+import { Controller } from "./Controller";
 import { Model } from "./Model";
 import { ModelEvent } from "./ModelEvent";
-import { Controller } from "./Controller";
 
 export class View<V> {
 	private readonly controller: Controller<V>;
@@ -37,6 +37,35 @@ export class View<V> {
 
 	unbindController() {
 		this.controller.unbind();
+	}
+
+	getHtmlEl(tree: Tree<V>): HTMLElement {
+		const result = this.treeToHtmlEl.get(tree);
+		if (!result) {
+			throw new Error("No such tree");
+		}
+		return result;
+	}
+
+	getTree(el: HTMLElement): Tree<V> {
+		const result = this.htmlElToTree.get(el);
+		if (!result) {
+			throw new Error("No such tree");
+		}
+		return result;
+	}
+
+	getTarget(e: Event): Tree<V> | undefined {
+		if (e.target instanceof Node) {
+			for (let current: Node | null = e.target; current; current = current.parentNode) {
+				if (current instanceof HTMLElement) {
+					const tree = this.htmlElToTree.get(current);
+					if (tree) {
+						return tree;
+					}
+				}
+			}
+		}
 	}
 
 	private handleModelEvent = (e: ModelEvent<V>) => {
@@ -95,34 +124,5 @@ export class View<V> {
 
 	private getParentEl(tree: Tree<V>): Node {
 		return tree.parent ? this.getHtmlEl(tree.parent).childNodes[1] : this.rootUlEl;
-	}
-
-	getHtmlEl(tree: Tree<V>): HTMLElement {
-		const result = this.treeToHtmlEl.get(tree);
-		if (!result) {
-			throw new Error("No such tree");
-		}
-		return result;
-	}
-
-	getTree(el: HTMLElement): Tree<V> {
-		const result = this.htmlElToTree.get(el);
-		if (!result) {
-			throw new Error("No such tree");
-		}
-		return result;
-	}
-
-	getTarget(e: Event): Tree<V> | undefined {
-		if (e.target instanceof Node) {
-			for (let current: Node | null = e.target; current; current = current.parentNode) {
-				if (current instanceof HTMLElement) {
-					const tree = this.htmlElToTree.get(current);
-					if (tree) {
-						return tree;
-					}
-				}
-			}
-		}
 	}
 }

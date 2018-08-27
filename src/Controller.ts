@@ -1,17 +1,17 @@
-import { View } from "./View";
-import { Model } from "./Model";
 import { Tree } from "ts-tree";
+import { Model } from "./Model";
+import { View } from "./View";
 
 const isBrowser = typeof navigator === "undefined";
 const isMac = isBrowser ? false : navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
 export class Controller<V> {
-	constructor(readonly view: View<V>, readonly model: Model<V>) {}
 	private mirrorEl?: HTMLElement;
 	private clickedEl?: HTMLElement;
 	private dragoverTree?: Tree<V>;
+	constructor(readonly view: View<V>, readonly model: Model<V>) {}
 
-	public bind() {
+	bind() {
 		document.addEventListener("mousedown", this.handleMousedownEvent);
 		document.addEventListener("mouseup", this.handleMouseupEvent);
 		document.addEventListener("click", this.handleClickEvent);
@@ -21,7 +21,7 @@ export class Controller<V> {
 		document.addEventListener("dragend", this.handleDragendEvent);
 	}
 
-	public unbind() {
+	unbind() {
 		document.removeEventListener("mousedown", this.handleMousedownEvent);
 		document.removeEventListener("mouseup", this.handleMouseupEvent);
 		document.removeEventListener("click", this.handleClickEvent);
