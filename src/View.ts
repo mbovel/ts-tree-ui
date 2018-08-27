@@ -68,14 +68,15 @@ export class View<V> {
 		}
 	}
 
-	protected createTreeEl(tree: Tree<V>) {
+	protected createTreeEl(tree: Tree<V>): HTMLElement {
 		const treeEl = document.createElement("li");
 		treeEl.appendChild(this.valueToHtmlEl(tree.value));
 		const childrenContainerEl = document.createElement("ul");
 		treeEl.appendChild(childrenContainerEl);
 		this.htmlElToTree.set(treeEl, tree);
 		this.treeToHtmlEl.set(tree, treeEl);
-		return treeEl;
+		const parentEl = this.getParentEl(tree);
+		return parentEl.insertBefore(treeEl, this.getNextSiblingEl(tree));
 	}
 
 	protected removeTreeEl(tree: Tree<V>) {
@@ -88,8 +89,7 @@ export class View<V> {
 	private handleModelEvent = (e: ModelEvent<V>) => {
 		switch (e.type) {
 			case "insert": {
-				const parentEl = this.getParentEl(e.tree);
-				parentEl.insertBefore(this.createTreeEl(e.tree), this.getNextSiblingEl(e.tree));
+				this.createTreeEl(e.tree);
 				break;
 			}
 			case "remove": {
