@@ -4,20 +4,20 @@ import { Model } from "./Model";
 import { ModelEvent } from "./ModelEvent";
 
 export class View<V> {
-	private readonly controller: Controller<V>;
+	protected readonly controller: Controller<V>;
+	private cursorEl: HTMLElement | null = null;
 	private readonly treeToHtmlEl: Map<Tree<V>, HTMLElement> = new Map();
 	private readonly htmlElToTree: Map<HTMLElement, Tree<V>> = new Map();
-	private cursorEl: HTMLElement | null = null;
 
 	constructor(
-		private readonly model: Model<V>,
-		private readonly valueToHtmlEl: (v: V) => Node,
-		private readonly rootUlEl: Node
+		protected readonly model: Model<V>,
+		protected readonly valueToHtmlEl: (v: V) => Node,
+		protected readonly rootUlEl: Node
 	) {
 		this.controller = new Controller<V>(this, model);
 	}
 
-	init() {
+	bind() {
 		this.bindModel();
 		this.bindController();
 	}
@@ -68,7 +68,7 @@ export class View<V> {
 		}
 	}
 
-	private handleModelEvent = (e: ModelEvent<V>) => {
+	protected handleModelEvent = (e: ModelEvent<V>) => {
 		switch (e.type) {
 			case "insert": {
 				const parentEl = this.getParentEl(e.tree);

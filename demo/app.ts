@@ -20,7 +20,7 @@ const toHtml = (v: number) => {
 };
 const outputEl = document.getElementById("output") as HTMLElement;
 const view = new View<number>(model, toHtml, outputEl);
-view.init();
+view.bind();
 
 const changeValueButton = document.getElementById("change-value") as HTMLElement;
 changeValueButton.addEventListener("click", e => {
