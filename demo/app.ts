@@ -1,5 +1,5 @@
 import { Tree } from "ts-tree";
-import { HTMLView } from "../src/HTMLView";
+import { View } from "../src/View";
 import { Model } from "../src/Model";
 
 const tree = new Tree(1, [
@@ -19,7 +19,8 @@ const toHtml = (v: number) => {
 	return containerEl;
 };
 const outputEl = document.getElementById("output") as HTMLElement;
-const view = new HTMLView<number>(model, toHtml, outputEl);
+const view = new View<number>(model, toHtml, outputEl);
+view.init();
 
 const changeValueButton = document.getElementById("change-value") as HTMLElement;
 changeValueButton.addEventListener("click", e => {
