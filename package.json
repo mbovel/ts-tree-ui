@@ -1,7 +1,7 @@
 {
 	"name": "ts-tree-ui",
 	"description": "Tree UI for the browser, supporting keyboard and drag'n'drop",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"license": "MIT",
