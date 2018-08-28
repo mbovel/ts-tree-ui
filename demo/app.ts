@@ -11,7 +11,7 @@ const tree = new Tree(1, [
 
 const tree2 = new Tree(9, [new Tree(10)]);
 
-const model = new Model<number>(tree, t => false, (a, b) => (a < b ? -1 : a > b ? 1 : 0));
+const model = new Model<number>(tree, t => false);
 const toHtml = (v: number) => {
 	const text = document.createTextNode(v.toString());
 	const containerEl = document.createElement("div");

@@ -68,7 +68,7 @@ export class View<V> {
 		}
 	}
 
-	protected createTreeEl(tree: Tree<V>): HTMLElement {
+	protected insert(tree: Tree<V>): HTMLElement {
 		const treeEl = document.createElement("li");
 		treeEl.appendChild(this.valueToHtmlEl(tree.value));
 		const childrenContainerEl = document.createElement("ul");
@@ -79,21 +79,33 @@ export class View<V> {
 		return parentEl.insertBefore(treeEl, this.getNextSiblingEl(tree));
 	}
 
-	protected removeTreeEl(tree: Tree<V>) {
+	protected remove(tree: Tree<V>) {
 		const treeEl = this.getHtmlEl(tree);
 		this.htmlElToTree.delete(treeEl);
 		this.treeToHtmlEl.delete(tree);
 		treeEl.remove();
 	}
 
+	protected changeValue(tree: Tree<V>) {
+		const treeEl = this.getHtmlEl(tree);
+		if (!treeEl.firstChild) {
+			throw new Error("");
+		}
+		treeEl.replaceChild(this.valueToHtmlEl(tree.value), treeEl.firstChild);
+	}
+
 	private handleModelEvent = (e: ModelEvent<V>) => {
 		switch (e.type) {
 			case "insert": {
-				this.createTreeEl(e.tree);
+				this.insert(e.tree);
 				break;
 			}
 			case "remove": {
-				this.removeTreeEl(e.tree);
+				this.remove(e.tree);
+				break;
+			}
+			case "change-value": {
+				this.changeValue(e.tree);
 				break;
 			}
 			case "add-to-selection": {
@@ -123,6 +135,13 @@ export class View<V> {
 	}
 
 	private getParentEl(tree: Tree<V>): Node {
-		return tree.parent ? this.getHtmlEl(tree.parent).childNodes[1] : this.rootUlEl;
+		if (!tree.parent) {
+			return this.rootUlEl;
+		}
+		const ulEl = this.getHtmlEl(tree.parent).querySelector("ul");
+		if (!ulEl) {
+			throw new Error();
+		}
+		return ulEl;
 	}
 }

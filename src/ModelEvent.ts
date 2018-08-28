@@ -5,6 +5,7 @@ export type ModelEvent<V> = Readonly<
 			type:
 				| "insert"
 				| "remove"
+				| "change-value"
 				| "add-to-selection"
 				| "remove-from-selection"
 				| "open"

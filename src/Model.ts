@@ -162,7 +162,12 @@ export class Model<V> {
 			return;
 		}
 		tree.value = newValue;
-		this.insertAllAfter(tree.parent, tree.previousSibling, tree);
+		if (!this.sort) {
+			this.pubsub.emit({ type: "change-value", tree });
+			this.pubsub.emit({ type: "tree-change", tree: this.root });
+		} else {
+			this.insertAllAfter(tree.parent, tree.previousSibling, tree);
+		}
 	}
 
 	insertAllAfter(parent: Tree<V>, previousSibling: Tree<V> | undefined, ...trees: Tree<V>[]) {
