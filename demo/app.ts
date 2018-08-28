@@ -29,3 +29,8 @@ changeValueButton.addEventListener("click", e => {
 		model.setValue(parseInt(newValue));
 	}
 });
+
+const changeRootButton = document.getElementById("change-root") as HTMLElement;
+changeRootButton.addEventListener("click", e => {
+	model.setRoot(tree2);
+});

@@ -151,6 +151,13 @@ export class Model<V> {
 		this.removeAll(...this.selectedSubtrees);
 	}
 
+	setRoot(newRoot: Tree<V>) {
+		this.pubsub.emit({ type: "remove", tree: this.root });
+		this.pubsub.emit({ type: "tree-change", tree: this.root });
+		this.root = newRoot;
+		this.emitTree(this.root);
+	}
+
 	setValue(newValue: V) {
 		if (this.cursor) {
 			return this.setValueOf(this.cursor, newValue);
